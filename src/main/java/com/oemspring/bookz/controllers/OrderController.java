@@ -3,6 +3,7 @@ package com.oemspring.bookz.controllers;
 import com.oemspring.bookz.requests.OrderRequest;
 import com.oemspring.bookz.requests.OrderUpdateRequest;
 import com.oemspring.bookz.responses.OrderResponse;
+import com.oemspring.bookz.responses.OrderUpdateResponse;
 import com.oemspring.bookz.services.OrderService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.quartz.SchedulerException;
@@ -35,13 +36,36 @@ public class OrderController {
 
     }
 
+    //with RequestBody
     @PutMapping("/{orderId}")
     public OrderResponse updateOrder(Principal principal, @PathVariable Long orderId, @RequestBody OrderUpdateRequest orderUpdateRequest) throws SchedulerException {
         System.out.printf("order update with-> id:" + orderId + " " + orderUpdateRequest + " u: " + principal.getName());
         return orderService.updateOrder(principal, orderId, orderUpdateRequest);
 
     }
+    @PutMapping("/accept/{orderId}")
+    public OrderUpdateResponse updateOrderAsACCEPTED(Principal principal, @PathVariable Long orderId) throws SchedulerException {
+        System.out.printf("order update with-> id:" + orderId + " " + "ACCEPTED" + " u: " + principal.getName());
+        return orderService.updateOrderAs(principal, orderId, "ACCEPTED");
 
+    }
+   // @PutMapping("/cancel/{orderId}")
+    @DeleteMapping("/cancel/{orderId}")
+
+    public OrderUpdateResponse updateOrderAsCANCELLED(Principal principal, @PathVariable Long orderId) throws SchedulerException {
+        System.out.printf("order update with-> id:" + orderId + " " + "CANCELLED" + " u: " + principal.getName());
+        return orderService.updateOrderAs(principal, orderId, "CANCELLED");
+
+    }
+
+  //  @PutMapping("/reject/{orderId}")
+    @DeleteMapping("/reject/{orderId}")
+
+    public OrderUpdateResponse updateOrderAsREJECTED(Principal principal, @PathVariable Long orderId) throws SchedulerException {
+        System.out.printf("order update with-> id:" + orderId + " " + "REJECTED" + " u: " + principal.getName());
+        return orderService.updateOrderAs(principal, orderId, "REJECTED");
+
+    }
 
     @GetMapping("/myorders")
     public List<OrderResponse> getMyOrders(Principal principal) {

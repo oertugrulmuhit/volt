@@ -10,6 +10,7 @@ import com.oemspring.bookz.repos.OrderRepository;
 import com.oemspring.bookz.requests.OrderRequest;
 import com.oemspring.bookz.requests.OrderUpdateRequest;
 import com.oemspring.bookz.responses.OrderResponse;
+import com.oemspring.bookz.responses.OrderUpdateResponse;
 import org.apache.commons.lang3.time.DateUtils;
 import org.quartz.*;
 import org.springframework.stereotype.Service;
@@ -84,8 +85,7 @@ public class OrderService {
 
     public OrderResponse updateOrder(Principal principal, Long orderId, OrderUpdateRequest orderUpdateRequest) throws SchedulerException {
         Order order = orderRepository.getReferenceById(orderId);
-        System.out.println(OrderStatus.CANCELLED);
-
+//Yanlızca henüz işlem görmemiş order durumu değişebilir.
         if (orderUpdateRequest.getOrderStatus().equals(OrderStatus.CANCELLED.toString()))
             if (order.getUser().getUsername().equals(principal.getName())
                     && order.getOrderStatus().equals(OrderStatus.CREATED)) {
@@ -146,5 +146,62 @@ public class OrderService {
     public List<Order> latestdaysdelivered() {
 
         return orderRepository.findAllDeliveredAgedOne().stream().toList();
+    }
+
+    public OrderUpdateResponse updateOrderAs(Principal principal, Long orderId, String status) throws SchedulerException {
+        Order order = orderRepository.getReferenceById(orderId);
+        String message="";
+        if (order.getOrderStatus().equals(OrderStatus.CREATED)) {
+            if (status.equals("ACCEPTED")) {
+
+
+                if (order.getProduct().getOwner().getUsername().equals(principal.getName())) {
+
+
+                    order.setOrderStatus(OrderStatus.valueOf("ACCEPTED"));
+                    String jobName = "accepted->" + order.getId() + "delivered->" + UUID.randomUUID();
+                    String randomlyAcceptedorDelivered = new Random().nextBoolean() ? "DELIVERED" : "ACCEPTED";
+                    int randomly2to15 = new Random().nextInt(2, 15);
+                    SpringBookzPro.logger.info(randomlyAcceptedorDelivered + randomly2to15);
+                    JobDetail jobAcceptedToDelivered2to15 = JobBuilder.newJob(TaskAcceptedToDelivered.class).withIdentity(jobName + "job2to15", "group1").usingJobData("orderStatus", randomlyAcceptedorDelivered).usingJobData("orderId", order.getId()).build();
+                    JobDetail jobAcceptedToDelivered15 = JobBuilder.newJob(TaskAcceptedToDelivered.class).withIdentity(jobName + "job15", "group1").usingJobData("orderStatus", "DELIVERED").usingJobData("orderId", order.getId()).build();
+
+//            Trigger trigger = TriggerBuilder.newTrigger().withIdentity(jobName+"trigger", "group1").startNow().withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(40).repeatForever()).build();
+                    Trigger trigger2to15seconds = TriggerBuilder.newTrigger().withIdentity(jobName + "trigger2to15", "group1").startAt(DateUtils.addSeconds(new Date(), randomly2to15))
+                            .build();
+                    Trigger trigger15seconds = TriggerBuilder.newTrigger().withIdentity(jobName + "trigger15", "group1").startAt(DateUtils.addSeconds(new Date(), 15))
+                            .build();
+                    SpringBookzPro.schedFact.getScheduler().scheduleJob(jobAcceptedToDelivered2to15, trigger2to15seconds);
+                    SpringBookzPro.schedFact.getScheduler().scheduleJob(jobAcceptedToDelivered15, trigger15seconds);
+
+message= "Sipariş edilen ürün satıcısı ACCEPTED etti.";
+
+                }else return new OrderUpdateResponse(new Order(),"ACCEPTED isteği sipariş edilen ürün satıcısına ait değil.");
+
+
+            }
+            else if (status.equals("REJECTED")) {
+
+                if (order.getProduct().getOwner().getUsername().equals(principal.getName())) {
+
+
+                    order.setOrderStatus(OrderStatus.valueOf(String.valueOf("REJECTED")));
+                    message= "Sipariş edilen ürün satıcısı REJECTED etti.";
+
+                }else return new OrderUpdateResponse("REJECTED isteği sipariş edilen ürün satıcısına ait değil.");
+
+
+            } else if (status.equals("CANCELLED")) {
+                if (order.getUser().getUsername().equals(principal.getName())) {
+                    SpringBookzPro.logger.info("CANCELLED ->sipariş veren kullanıcı");
+                    order.setOrderStatus(OrderStatus.valueOf("CANCELLED"));
+                    message= "Sipariş veren kullanıcı CANCELLED etti.";
+
+                } else return new OrderUpdateResponse("CANCELLED isteği sipariş sahibine ait değil.");
+            }
+            return new OrderUpdateResponse(orderRepository.save(order),message);
+
+        }
+        return  new OrderUpdateResponse("ACCEPTED REJECTED CANCELLED sadece CREATED siparişlere yapılabilir. ");
     }
 }
