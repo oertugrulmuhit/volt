@@ -100,7 +100,15 @@ public class OrderService {
     }
 
     public OrderUpdateResponse updateOrderAs(Principal principal, Long orderId, String status) throws SchedulerException {
-        Order order = orderRepository.getReferenceById(orderId);
+
+        Order order;
+        if(orderRepository.existsById(orderId)){
+            order=orderRepository.getReferenceById(orderId);}
+        else{
+            System.out.println("Ürün mevcut değil.");
+            return new OrderUpdateResponse("Ürün mevcut değil");
+        }
+
         String message="";
         if (order.getOrderStatus().equals(OrderStatus.CREATED)) {
             if (status.equals("ACCEPTED")) {
@@ -122,7 +130,7 @@ public class OrderService {
                 if (order.getProduct().getOwner().getUsername().equals(principal.getName())) {
 
 
-                    order.setOrderStatus(OrderStatus.valueOf(String.valueOf("REJECTED")));
+                    order.setOrderStatus(OrderStatus.valueOf("REJECTED"));
                     message= "Sipariş edilen ürün satıcısı REJECTED etti.";
 
                 }else return new OrderUpdateResponse("REJECTED isteği sipariş edilen ürün satıcısına ait değil.");
