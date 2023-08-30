@@ -1,5 +1,6 @@
 package com.oemspring.bookz.controllers;
 
+import com.oemspring.bookz.SpringBookzPro;
 import com.oemspring.bookz.requests.OrderRequest;
 import com.oemspring.bookz.requests.OrderUpdateRequest;
 import com.oemspring.bookz.responses.OrderResponse;
@@ -30,19 +31,13 @@ public class OrderController {
     @PostMapping
 
     public OrderResponse createOrder(Principal principal, @RequestBody OrderRequest orderRequest) {
-        System.out.printf("order create->" + orderRequest + principal.getName());
+       SpringBookzPro.logger.info("order create->" + orderRequest + principal.getName());
         return orderService.createOrder(principal, orderRequest);
 
 
     }
 
-    //with RequestBody
-    @PutMapping("/{orderId}")
-    public OrderResponse updateOrder(Principal principal, @PathVariable Long orderId, @RequestBody OrderUpdateRequest orderUpdateRequest) throws SchedulerException {
-        System.out.printf("order update with-> id:" + orderId + " " + orderUpdateRequest + " u: " + principal.getName());
-        return orderService.updateOrder(principal, orderId, orderUpdateRequest);
 
-    }
     @PutMapping("/accept/{orderId}")
     public OrderUpdateResponse updateOrderAsACCEPTED(Principal principal, @PathVariable Long orderId) throws SchedulerException {
         System.out.printf("order update with-> id:" + orderId + " " + "ACCEPTED" + " u: " + principal.getName());
