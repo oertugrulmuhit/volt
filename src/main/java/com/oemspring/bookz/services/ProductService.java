@@ -26,7 +26,7 @@ public class ProductService {
     public List<ProductResponse> findAllProducts() {
 
         return productRepository.findAll().stream().map(p ->
-                new ProductResponse(p)
+                new ProductResponse(p,"OK.")
         ).toList();
 
 
@@ -38,9 +38,11 @@ public class ProductService {
     }
 
     public ProductResponse getOneProduct(Long productId) {
-        return new ProductResponse(productRepository.getById(productId));
-        //  return  productRepository.getById(productId);
-    }
+
+       return new ProductResponse(productRepository.getReferenceById(productId), "OK.");
+
+
+   }
 
     public Product getReferenceById(Long productId) {
         return productRepository.getReferenceById(productId);
@@ -58,8 +60,8 @@ public class ProductService {
             p.setName(productCreateRequest.getName());
             p.setQuantity(productCreateRequest.getQuantity());
             p.setDescription(productCreateRequest.getDescription());
-            return new ProductResponse(productRepository.save(p));
-        } else return new ProductResponse(islenen);
+            return new ProductResponse(productRepository.save(p),"OK.");
+        } else return new ProductResponse("Değişiklik talebi ürün sahibine AİT DEĞİL.");
 
     }
 
@@ -70,10 +72,15 @@ public class ProductService {
 
         User kullanici = userService.findByUsername(principal.getName()).get();
         System.out.println(kullanici);
+        try{
         if (productRepository.getReferenceById(productId).getOwner().equals(kullanici)) {
             productRepository.deleteById(productId);
             return "Silme başarılı";
-        } else return "Başka kullacıya ait ürün.";
+        } else return "Başka kullacıya ait ürün.";}catch (Exception e){
+
+            return "Ürün bulunamadı";
+
+        }
     }
 
     public ProductResponse createProduct(Principal principal, ProductCreateRequest productCreateRequest) {
@@ -86,21 +93,21 @@ public class ProductService {
         p.setName(productCreateRequest.getName());
         p.setDescription(productCreateRequest.getDescription());
         p.setQuantity(productCreateRequest.getQuantity());
-        return new ProductResponse(productRepository.save(p));
+        return new ProductResponse(productRepository.save(p),"OK.");
 
     }
 
     public List<ProductResponse> getlistbyDescProducts(String productDesc) {
 
-        return productRepository.findByDescription(productDesc).stream().map(p -> new ProductResponse(p)).toList();
+        return productRepository.findByDescription(productDesc).stream().map(p -> new ProductResponse(p,"OK.")).toList();
     }
 
     public List<ProductResponse> getlistbyNameProducts(String productName) {
-        return productRepository.findByName(productName).stream().map(p -> new ProductResponse(p)).toList();
+        return productRepository.findByName(productName).stream().map(p -> new ProductResponse(p,"OK.")).toList();
 
     }
 
     public List<ProductResponse> getlistbyQuantityProducts(int quantity) {
-        return productRepository.findByQuantityGreaterThanEqual(quantity).stream().map(p -> new ProductResponse(p)).toList();
+        return productRepository.findByQuantityGreaterThanEqual(quantity).stream().map(p -> new ProductResponse(p,"Ok.")).toList();
     }
 }

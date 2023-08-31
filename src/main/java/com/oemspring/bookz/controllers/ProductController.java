@@ -4,6 +4,7 @@ import com.oemspring.bookz.requests.ProductCreateRequest;
 import com.oemspring.bookz.responses.ProductResponse;
 import com.oemspring.bookz.services.ProductService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -56,20 +57,17 @@ public class ProductController {
         return productService.getlistbyQuantityProducts(quantity);
     }
 
-    /*
-        @GetMapping("/s/{productName}")
-        public Customer getOneNameCustomer(@PathVariable String productName){
-            System.out.printf("getOneProduct"+customerName);
-            //return new Customer();
-            return customerService.getOneNameCustomer(customerName);
 
-        }
-    */
     @GetMapping("/{productId}")
     public ProductResponse getOneProduct(@PathVariable Long productId) {
         System.out.printf("getOneProduct" + productId);
         //return new Customer();
-        return productService.getOneProduct(productId);
+        try {
+            return productService.getOneProduct(productId);
+        }
+        catch (Exception e) {
+            return new ProductResponse("Ürün bulunamadı.");
+        }
 
     }
 

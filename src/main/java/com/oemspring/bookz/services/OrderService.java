@@ -37,20 +37,21 @@ public class OrderService {
     }
 
     public OrderResponse createOrder(Principal principal, OrderRequest orderRequest) {
-        Product p = productService.getReferenceById((long) orderRequest.getProductId());
+try {
+    Product p = productService.getReferenceById((long) orderRequest.getProductId());
 
-        if (p.getQuantity() >= orderRequest.getQuantity()) {
-            Order o = new Order();
-            o.setQuantity(orderRequest.getQuantity());
-            o.setProduct(p);
-            User owner = userService.findByUsername(principal.getName()).get();
-            o.setUser(owner);
+    if (p.getQuantity() >= orderRequest.getQuantity()) {
+        Order o = new Order();
+        o.setQuantity(orderRequest.getQuantity());
+        o.setProduct(p);
+        User owner = userService.findByUsername(principal.getName()).get();
+        o.setUser(owner);
          /*
             User owner = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName()).get();
             o.setUser(owner);*/
-            return new OrderResponse(orderRepository.save(o));
-        } else return null;
-
+        return new OrderResponse(orderRepository.save(o), "good");
+    } else return new OrderResponse("Sipariş için yeterli stok yok.");
+}catch (Exception e){return new OrderResponse("ürün yok");}
     }
 
 
@@ -88,7 +89,7 @@ public class OrderService {
 
         return
                 orderRepository.findByUser(userService.findByUsername(principal.getName()).get()).stream().map(p -> {
-                    return new OrderResponse(p);
+                    return new OrderResponse(p,"OK.");
                 }).collect(Collectors.toList());
 
 

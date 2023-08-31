@@ -27,6 +27,6 @@ public class ProfitOfDayService {
 
     public List<ProfitOfDayResponse> UsersProfitsByName(String username) {
         User u=userService.findByUsername(username).get();
-        return profitOfDayRepository.findByUser(u).stream().map(p-> new ProfitOfDayResponse(p)).toList();
+        return profitOfDayRepository.findByUser(u).stream().map(p-> new ProfitOfDayResponse(p,"OK.")).toList();
     }
 }

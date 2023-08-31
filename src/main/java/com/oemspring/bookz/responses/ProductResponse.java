@@ -10,14 +10,20 @@ public class ProductResponse {
     String description;
     int quantity;
     Long ownerId;
+    String message;
 
 
-    public ProductResponse(Product entity) {
+    public ProductResponse(Product entity,String message) {
         this.id = entity.getId();
         this.ownerId = entity.getOwner().getId();
         this.description = entity.getDescription();
         this.name = entity.getName();
         this.quantity = entity.getQuantity();
+        this.message=message;
     }
 
+    //for not found implementation
+public ProductResponse(String message){
+        this.message=message;
+}
 }

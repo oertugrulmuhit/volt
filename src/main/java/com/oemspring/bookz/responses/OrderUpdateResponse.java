@@ -21,9 +21,9 @@ public class OrderUpdateResponse {
         this.productId = order.getProduct().getId();
         this.quantity = order.getQuantity();
         this.userId = order.getUser().getId();
-this.message=message;
+        this.message=message;
     }
-
+    //for not found implementation
     public OrderUpdateResponse(String message){
         this.message=message;
     }

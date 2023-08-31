@@ -13,12 +13,18 @@ public class OrderResponse {
     private Long productId;
     private Long userId;
     private int quantity;
-
-    public OrderResponse(Order order) {
+private String message;
+    public OrderResponse(Order order,String message) {
         this.id = order.getId();
         this.orderStatus = order.getOrderStatus();
         this.productId = order.getProduct().getId();
         this.quantity = order.getQuantity();
         this.userId = order.getUser().getId();
+        this.message=message;
+    }
+   //for not found implementation
+    public OrderResponse(String  message){
+
+        this.message=message;
     }
 }

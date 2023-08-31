@@ -76,7 +76,7 @@ public class OrderController {
     @GetMapping("/latestdaysdelivered")
     public List<OrderResponse> latestdaysdelivered() {
 
-        return orderService.latestdaysdelivered().stream().map(p -> new OrderResponse(p)).toList();
+        return orderService.latestdaysdelivered().stream().map(p -> new OrderResponse(p,"OK.")).toList();
     }
 //cancelOrder
 
