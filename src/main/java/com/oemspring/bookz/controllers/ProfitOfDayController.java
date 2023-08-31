@@ -25,9 +25,11 @@ public class ProfitOfDayController {
     @GetMapping("/{username}")
     public List<ProfitOfDayResponse> usersprofits(@PathVariable String username) {
         System.out.printf("get" + username + "'s profits ");
-       try {
-           return profitOfDayService.UsersProfitsByName(username);
-       }catch (Exception e){return null;}
+        try {
+            return profitOfDayService.UsersProfitsByName(username);
+        } catch (Exception e) {
+            return null;
+        }
         // return  orderService.getMyOrders(principal);
     }
 

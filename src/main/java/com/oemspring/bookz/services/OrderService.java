@@ -1,26 +1,23 @@
 package com.oemspring.bookz.services;
 
 import com.oemspring.bookz.SpringBookzPro;
+import com.oemspring.bookz.exception.ItemOwnerException;
+import com.oemspring.bookz.exception.ResourceNotFoundException;
 import com.oemspring.bookz.jobs.JobCreatorAcceptedtoDelivered;
-import com.oemspring.bookz.jobs.TaskAcceptedToDelivered;
 import com.oemspring.bookz.models.Order;
 import com.oemspring.bookz.models.OrderStatus;
 import com.oemspring.bookz.models.Product;
 import com.oemspring.bookz.models.User;
 import com.oemspring.bookz.repos.OrderRepository;
 import com.oemspring.bookz.requests.OrderRequest;
-import com.oemspring.bookz.requests.OrderUpdateRequest;
 import com.oemspring.bookz.responses.OrderResponse;
 import com.oemspring.bookz.responses.OrderUpdateResponse;
-import org.apache.commons.lang3.time.DateUtils;
-import org.quartz.*;
+import org.quartz.SchedulerException;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 
@@ -37,21 +34,26 @@ public class OrderService {
     }
 
     public OrderResponse createOrder(Principal principal, OrderRequest orderRequest) {
-try {
-    Product p = productService.getReferenceById((long) orderRequest.getProductId());
+        try {
+            Product p = productService.getReferenceById((long) orderRequest.getProductId());
 
-    if (p.getQuantity() >= orderRequest.getQuantity()) {
-        Order o = new Order();
-        o.setQuantity(orderRequest.getQuantity());
-        o.setProduct(p);
-        User owner = userService.findByUsername(principal.getName()).get();
-        o.setUser(owner);
+            if (p.getQuantity() >= orderRequest.getQuantity()) {
+                Order o = new Order();
+                o.setQuantity(orderRequest.getQuantity());
+                o.setProduct(p);
+                User owner = userService.findByUsername(principal.getName()).get();
+                o.setUser(owner);
          /*
             User owner = userService.findByUsername(SecurityContextHolder.getContext().getAuthentication().getName()).get();
             o.setUser(owner);*/
-        return new OrderResponse(orderRepository.save(o), "good");
-    } else return new OrderResponse("Sipariş için yeterli stok yok.");
-}catch (Exception e){return new OrderResponse("ürün yok");}
+                return new OrderResponse(orderRepository.save(o), "good");
+            } else
+
+                throw new ResourceNotFoundException("Sipariş için yeterli stok yok." + p.getId() + " " + p.getQuantity() + " " + orderRequest.getQuantity());
+        } catch (Exception e) {
+
+            throw new ResourceNotFoundException("ID li ürün yok." + orderRequest.getProductId());
+        }
     }
 
 
@@ -89,7 +91,7 @@ try {
 
         return
                 orderRepository.findByUser(userService.findByUsername(principal.getName()).get()).stream().map(p -> {
-                    return new OrderResponse(p,"OK.");
+                    return new OrderResponse(p, "OK.");
                 }).collect(Collectors.toList());
 
 
@@ -103,14 +105,15 @@ try {
     public OrderUpdateResponse updateOrderAs(Principal principal, Long orderId, String status) throws SchedulerException {
 
         Order order;
-        if(orderRepository.existsById(orderId)){
-            order=orderRepository.getReferenceById(orderId);}
-        else{
-            System.out.println("Ürün mevcut değil.");
-            return new OrderUpdateResponse("Ürün mevcut değil");
+        if (orderRepository.existsById(orderId)) {
+            order = orderRepository.getReferenceById(orderId);
+        } else {
+
+            throw new ResourceNotFoundException("ID li order yok." + orderId);
+
         }
 
-        String message="";
+        String message = "";
         if (order.getOrderStatus().equals(OrderStatus.CREATED)) {
             if (status.equals("ACCEPTED")) {
 
@@ -120,34 +123,39 @@ try {
 
                     order.setOrderStatus(OrderStatus.valueOf("ACCEPTED"));
                     JobCreatorAcceptedtoDelivered.jobCreator(order);
-                    message= "Sipariş edilen ürün satıcısı ACCEPTED etti.";
+                    message = "Sipariş edilen ürün satıcısı ACCEPTED etti.";
 
-                }else return new OrderUpdateResponse("ACCEPTED isteği sipariş edilen ürün satıcısına ait değil.");
+                } else
+                    throw new ItemOwnerException("ACCEPTED isteği sipariş edilen ürün satıcısına ait değil.");
 
 
-            }
-            else if (status.equals("REJECTED")) {
+            } else if (status.equals("REJECTED")) {
 
                 if (order.getProduct().getOwner().getUsername().equals(principal.getName())) {
 
 
                     order.setOrderStatus(OrderStatus.valueOf("REJECTED"));
-                    message= "Sipariş edilen ürün satıcısı REJECTED etti.";
+                    message = "Sipariş edilen ürün satıcısı REJECTED etti.";
 
-                }else return new OrderUpdateResponse("REJECTED isteği sipariş edilen ürün satıcısına ait değil.");
+                } else
 
+                    throw new ItemOwnerException("REJECTED isteği sipariş edilen ürün satıcısına ait değil.");
 
             } else if (status.equals("CANCELLED")) {
                 if (order.getUser().getUsername().equals(principal.getName())) {
                     SpringBookzPro.logger.info("CANCELLED ->sipariş veren kullanıcı");
                     order.setOrderStatus(OrderStatus.valueOf("CANCELLED"));
-                    message= "Sipariş veren kullanıcı CANCELLED etti.";
+                    message = "Sipariş veren kullanıcı CANCELLED etti.";
 
-                } else return new OrderUpdateResponse("CANCELLED isteği sipariş sahibine ait değil.");
+                } else
+                    throw new ItemOwnerException("CANCELLED isteği sipariş sahibine ait değil.");
+
+
             }
-            return new OrderUpdateResponse(orderRepository.save(order),message);
+            return new OrderUpdateResponse(orderRepository.save(order), message);
 
         }
-        return  new OrderUpdateResponse("ACCEPTED REJECTED CANCELLED sadece CREATED siparişlere yapılabilir. ");
+        throw new ItemOwnerException("ACCEPTED REJECTED CANCELLED sadece CREATED siparişlere yapılabilir. ");
+
     }
 }

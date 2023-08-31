@@ -1,16 +1,18 @@
 package com.oemspring.bookz.services;
 
 import com.oemspring.bookz.SpringBookzPro;
+import com.oemspring.bookz.exception.ItemOwnerException;
 import com.oemspring.bookz.models.Product;
 import com.oemspring.bookz.models.User;
 import com.oemspring.bookz.repos.ProductRepository;
 import com.oemspring.bookz.requests.ProductCreateRequest;
 import com.oemspring.bookz.responses.ProductResponse;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
 import java.util.List;
-
 
 @Service
 public class ProductService {
@@ -26,7 +28,7 @@ public class ProductService {
     public List<ProductResponse> findAllProducts() {
 
         return productRepository.findAll().stream().map(p ->
-                new ProductResponse(p,"OK.")
+                new ProductResponse(p, "OK.")
         ).toList();
 
 
@@ -39,10 +41,10 @@ public class ProductService {
 
     public ProductResponse getOneProduct(Long productId) {
 
-       return new ProductResponse(productRepository.getReferenceById(productId), "OK.");
+        return new ProductResponse(productRepository.getReferenceById(productId), "OK.");
 
 
-   }
+    }
 
     public Product getReferenceById(Long productId) {
         return productRepository.getReferenceById(productId);
@@ -60,28 +62,32 @@ public class ProductService {
             p.setName(productCreateRequest.getName());
             p.setQuantity(productCreateRequest.getQuantity());
             p.setDescription(productCreateRequest.getDescription());
-            return new ProductResponse(productRepository.save(p),"OK.");
-        } else return new ProductResponse("Değişiklik talebi ürün sahibine AİT DEĞİL.");
+            return new ProductResponse(productRepository.save(p), "OK.");
+        } else
 
+            throw new ItemOwnerException("Değişiklik talebi ürün sahibine AİT DEĞİL.");
     }
 
 
-    public String deleteById(Principal principal, Long productId) {
+    public ResponseEntity<HttpStatus> deleteById(Principal principal, Long productId) {
 
         System.out.println("deleteById" + productId);
 
         User kullanici = userService.findByUsername(principal.getName()).get();
         System.out.println(kullanici);
-        try{
+
         if (productRepository.getReferenceById(productId).getOwner().equals(kullanici)) {
+
+
             productRepository.deleteById(productId);
-            return "Silme başarılı";
-        } else return "Başka kullacıya ait ürün.";}catch (Exception e){
 
-            return "Ürün bulunamadı";
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 
-        }
+        } else throw new ItemOwnerException("Başka bir kullanıcıya ait ürün." + productId);
+
+
     }
+
 
     public ProductResponse createProduct(Principal principal, ProductCreateRequest productCreateRequest) {
         Product p = new Product();
@@ -93,21 +99,21 @@ public class ProductService {
         p.setName(productCreateRequest.getName());
         p.setDescription(productCreateRequest.getDescription());
         p.setQuantity(productCreateRequest.getQuantity());
-        return new ProductResponse(productRepository.save(p),"OK.");
+        return new ProductResponse(productRepository.save(p), "OK.");
 
     }
 
     public List<ProductResponse> getlistbyDescProducts(String productDesc) {
 
-        return productRepository.findByDescription(productDesc).stream().map(p -> new ProductResponse(p,"OK.")).toList();
+        return productRepository.findByDescription(productDesc).stream().map(p -> new ProductResponse(p, "OK.")).toList();
     }
 
     public List<ProductResponse> getlistbyNameProducts(String productName) {
-        return productRepository.findByName(productName).stream().map(p -> new ProductResponse(p,"OK.")).toList();
+        return productRepository.findByName(productName).stream().map(p -> new ProductResponse(p, "OK.")).toList();
 
     }
 
     public List<ProductResponse> getlistbyQuantityProducts(int quantity) {
-        return productRepository.findByQuantityGreaterThanEqual(quantity).stream().map(p -> new ProductResponse(p,"Ok.")).toList();
+        return productRepository.findByQuantityGreaterThanEqual(quantity).stream().map(p -> new ProductResponse(p, "Ok.")).toList();
     }
 }
