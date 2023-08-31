@@ -1,10 +1,12 @@
 package com.oemspring.bookz.controllers;
 
+import com.oemspring.bookz.exception.ResourceNotFoundException;
 import com.oemspring.bookz.requests.ProductCreateRequest;
 import com.oemspring.bookz.responses.ProductResponse;
 import com.oemspring.bookz.services.ProductService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import jakarta.persistence.EntityNotFoundException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -61,14 +63,11 @@ public class ProductController {
     @GetMapping("/{productId}")
     public ProductResponse getOneProduct(@PathVariable Long productId) {
         System.out.printf("getOneProduct" + productId);
-        //return new Customer();
         try {
             return productService.getOneProduct(productId);
+        } catch (Exception e) {
+            throw new ResourceNotFoundException("Not found Product with id = " + productId);
         }
-        catch (Exception e) {
-            return new ProductResponse("Ürün bulunamadı.");
-        }
-
     }
 
 
@@ -87,8 +86,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{productId}")
-    public String deleteProduct(Principal principal, @PathVariable Long productId) {
+    public ResponseEntity<HttpStatus> deleteProduct(Principal principal, @PathVariable Long productId) {
         return productService.deleteById(principal, productId);
-        //return "OK.";
     }
 }

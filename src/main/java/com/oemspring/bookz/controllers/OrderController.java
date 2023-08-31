@@ -2,7 +2,6 @@ package com.oemspring.bookz.controllers;
 
 import com.oemspring.bookz.SpringBookzPro;
 import com.oemspring.bookz.requests.OrderRequest;
-import com.oemspring.bookz.requests.OrderUpdateRequest;
 import com.oemspring.bookz.responses.OrderResponse;
 import com.oemspring.bookz.responses.OrderUpdateResponse;
 import com.oemspring.bookz.services.OrderService;
@@ -31,7 +30,7 @@ public class OrderController {
     @PostMapping
 
     public OrderResponse createOrder(Principal principal, @RequestBody OrderRequest orderRequest) {
-       SpringBookzPro.logger.info("order create->" + orderRequest + principal.getName());
+        SpringBookzPro.logger.info("order create->" + orderRequest + principal.getName());
         return orderService.createOrder(principal, orderRequest);
 
 
@@ -44,7 +43,8 @@ public class OrderController {
         return orderService.updateOrderAs(principal, orderId, "ACCEPTED");
 
     }
-   // @PutMapping("/cancel/{orderId}")
+
+    // @PutMapping("/cancel/{orderId}")
     @DeleteMapping("/cancel/{orderId}")
 
     public OrderUpdateResponse updateOrderAsCANCELLED(Principal principal, @PathVariable Long orderId) throws SchedulerException {
@@ -53,7 +53,7 @@ public class OrderController {
 
     }
 
-  //  @PutMapping("/reject/{orderId}")
+    //  @PutMapping("/reject/{orderId}")
     @DeleteMapping("/reject/{orderId}")
 
     public OrderUpdateResponse updateOrderAsREJECTED(Principal principal, @PathVariable Long orderId) throws SchedulerException {
@@ -76,7 +76,7 @@ public class OrderController {
     @GetMapping("/latestdaysdelivered")
     public List<OrderResponse> latestdaysdelivered() {
 
-        return orderService.latestdaysdelivered().stream().map(p -> new OrderResponse(p,"OK.")).toList();
+        return orderService.latestdaysdelivered().stream().map(p -> new OrderResponse(p, "OK.")).toList();
     }
 //cancelOrder
 
