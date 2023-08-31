@@ -3,7 +3,7 @@ package com.oemspring.bookz.services;
 import com.oemspring.bookz.SpringBookzPro;
 import com.oemspring.bookz.exception.ItemOwnerException;
 import com.oemspring.bookz.exception.ResourceNotFoundException;
-import com.oemspring.bookz.jobs.JobCreatorAcceptedtoDelivered;
+import com.oemspring.bookz.jobs.JobCreator;
 import com.oemspring.bookz.models.Order;
 import com.oemspring.bookz.models.OrderStatus;
 import com.oemspring.bookz.models.Product;
@@ -122,7 +122,7 @@ public class OrderService {
 
 
                     order.setOrderStatus(OrderStatus.valueOf("ACCEPTED"));
-                    JobCreatorAcceptedtoDelivered.jobCreator(order);
+                    JobCreator.jobCreatorAcceptedtoDelivered(order);
                     message = "Sipariş edilen ürün satıcısı ACCEPTED etti.";
 
                 } else
